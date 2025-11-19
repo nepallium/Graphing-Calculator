@@ -5,8 +5,6 @@
 package com.vanier.easygrapher;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Scanner;
 import java.util.Stack;
 
 /**
@@ -19,7 +17,7 @@ public class PostfixEvaluator {
     private final static String DIVIDE = "/";
     private final static String EXPONENT = "^";
 
-    public double evaluate(String[] expressionArr) {
+    public double evaluatePostfix(String[] expressionArr) {
         double operand1, operand2, result = 0.0;
         Stack<Double> stack = new Stack<>();
 
@@ -55,25 +53,62 @@ public class PostfixEvaluator {
         return result;
     }
 
-    public String[] convertInfix(String expr) {
+    public String[] convertInfixToArr(String expr) {
         if (expr == null || expr.isEmpty()) {
             return null;
         }
 
+        ArrayList<String> arrayList = new ArrayList<>();
+        boolean isPrevNum = false;
+        for (int i = 0; i < expr.length(); i++) {
+            String currStr = String.valueOf(expr.charAt(i));
+            char currChr = currStr.charAt(0);
+
+            if (currStr.isBlank()) {
+                continue;
+            }
+
+            else if ((currChr >= 'a' && currChr <= 'z') ||
+                    (currChr >= 'A' && currChr <= 'Z') ||
+                    (currChr >= '0' && currChr <= '9') ||
+                    currChr == '.') {
+                if (isPrevNum) {
+                    String newNum = arrayList.getLast() + currChr;
+                    arrayList.set(arrayList.size() - 1, newNum);
+                } else {
+                    arrayList.add(currStr);
+                }
+                isPrevNum = true;
+            } else {
+                isPrevNum = false;
+                arrayList.add(currStr);
+            }
+        }
+
+        return arrayList.toArray(new String[0]);
+    }
+
+    public String[] convertInfixToPost(String exprStr) {
+        if (exprStr == null || exprStr.isEmpty()) {
+            return null;
+        }
+        String[] expr = convertInfixToArr(exprStr);
+
         ArrayList<String> postfixList = new ArrayList<>();
         Stack<String> operatorStack = new Stack<>();
 
-        for (int i = 0; i < expr.length(); i++) {
-            String currStr = String.valueOf(expr.charAt(i));
+        for (int i = 0; i < expr.length; i++) {
+            String currStr = String.valueOf(expr[i]);
             char currChr = currStr.charAt(0);
 
             // if operand, add to postfix
             if ((currChr >= 'a' && currChr <= 'z') ||
                     (currChr >= 'A' && currChr <= 'Z') ||
-                    (currChr >= '0' && currChr <= '9'))
+                    (currChr >= '0' && currChr <= '9') ||
+                    currChr == '.'
+            ) {
                 postfixList.add(currStr);
-
-            else if (currChr == '(') {
+            } else if (currChr == '(') {
                 operatorStack.push(currStr);
             }
 
