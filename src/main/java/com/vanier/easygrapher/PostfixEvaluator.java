@@ -28,16 +28,21 @@ public class PostfixEvaluator {
             }
 
             if (isOperator(token)) {
-                operand2 = stack.pop();
-                operand1 = stack.pop();
+                if (token.equals(UNARY_SUB)) {
+                    operand1 = stack.pop();
+                    result = -operand1;
+                } else {
+                    operand2 = stack.pop();
+                    operand1 = stack.pop();
 
-                result = switch (token) {
-                    case ADD -> operand1 + operand2;
-                    case SUBTRACT -> operand1 - operand2;
-                    case MULTIPLY -> operand1 * operand2;
-                    case DIVIDE -> operand1 / operand2;
-                    default -> result;
-                };
+                    result = switch (token) {
+                        case ADD -> operand1 + operand2;
+                        case SUBTRACT -> operand1 - operand2;
+                        case MULTIPLY -> operand1 * operand2;
+                        case DIVIDE -> operand1 / operand2;
+                        default -> result;
+                    };
+                }
 
                 stack.push(result);
             } else {
@@ -86,7 +91,7 @@ public class PostfixEvaluator {
                     // or after an opening parenthesis
                     // or after binary operator
                     // then it must be unary negation '~'
-                    if ((i == 0 || isOperator(prevStr)) && (!prevStr.equals(")"))) {
+                    if (i == 0 || prevStr.equals("(") || isOperator(prevStr)) {
                         if (currChr == '-') {
                             arrayList.add("~");
                         }
@@ -169,10 +174,17 @@ public class PostfixEvaluator {
         }
 
         return switch (c) {
-            case ADD, SUBTRACT, MULTIPLY, DIVIDE, EXPONENT, UNARY_SUB,
-                 "(", ")" -> true;
+            case ADD, SUBTRACT, MULTIPLY, DIVIDE, EXPONENT, UNARY_SUB -> true;
             default -> false;
         };
+    }
+
+    private boolean isParenthesis(String c) {
+        if (c == null) {
+            return false;
+        }
+
+        return c.equals("(") || c.equals(")");
     }
 
     /**
@@ -187,7 +199,7 @@ public class PostfixEvaluator {
         }
 
         return switch (operator) {
-            case EXPONENT, SUBTRACT -> true;
+            case EXPONENT, UNARY_SUB -> true;
             default -> false;
         };
     }
@@ -200,6 +212,7 @@ public class PostfixEvaluator {
      */
     private int getOperatorPriority(String operator) {
         return switch (operator) {
+            case UNARY_SUB -> 4;
             case EXPONENT -> 3;
             case MULTIPLY, DIVIDE -> 2;
             case ADD, SUBTRACT -> 1;
