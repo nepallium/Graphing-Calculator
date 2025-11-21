@@ -16,6 +16,7 @@ public class PostfixEvaluator {
     private final static String MULTIPLY = "*";
     private final static String DIVIDE = "/";
     private final static String EXPONENT = "^";
+    private final static String UNARY_SUB = "~";
 
     public double evaluatePostfix(String[] expressionArr) {
         double operand1, operand2, result = 0.0;
@@ -59,6 +60,7 @@ public class PostfixEvaluator {
         }
 
         ArrayList<String> arrayList = new ArrayList<>();
+        String prevStr = "";
         boolean isPrevNum = false;
         for (int i = 0; i < expr.length(); i++) {
             String currStr = String.valueOf(expr.charAt(i));
@@ -66,9 +68,7 @@ public class PostfixEvaluator {
 
             if (currStr.isBlank()) {
                 continue;
-            }
-
-            else if ((currChr >= 'a' && currChr <= 'z') ||
+            } else if ((currChr >= 'a' && currChr <= 'z') ||
                     (currChr >= 'A' && currChr <= 'Z') ||
                     (currChr >= '0' && currChr <= '9') ||
                     currChr == '.') {
@@ -81,8 +81,23 @@ public class PostfixEvaluator {
                 isPrevNum = true;
             } else {
                 isPrevNum = false;
+                if (currChr == '-' || currChr == '+') {
+                    // '-' is a negation when minus is at beginning of expression
+                    // or after an opening parenthesis
+                    // or after binary operator
+                    // then it must be unary negation '~'
+                    if ((i == 0 || isOperator(prevStr)) && (!prevStr.equals(")"))) {
+                        if (currChr == '-') {
+                            arrayList.add("~");
+                        }
+                        // no need to add unary '+'
+                        continue;
+                    }
+                }
                 arrayList.add(currStr);
             }
+
+            prevStr = currStr;
         }
 
         return arrayList.toArray(new String[0]);
@@ -154,7 +169,7 @@ public class PostfixEvaluator {
         }
 
         return switch (c) {
-            case ADD, SUBTRACT, MULTIPLY, DIVIDE, EXPONENT,
+            case ADD, SUBTRACT, MULTIPLY, DIVIDE, EXPONENT, UNARY_SUB,
                  "(", ")" -> true;
             default -> false;
         };

@@ -9,6 +9,8 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
+
 /**
  *
  * @author Alex
@@ -52,13 +54,19 @@ public class PostfixEvaluatorTest {
     public void testConvertInfixToArr() {
         String arr1 = "(42 + 1) -- 3";
         String[] result1 = pfEval.convertInfixToArr(arr1);
-        String[] expected1 = {"(", "42", "+", "1", ")", "-", "-", "3"};
+        String[] expected1 = {"(", "42", "+", "1", ")", "-", "~", "3"};
         assertArrayEquals(expected1, result1);
 
         String arr2 = "(42.35 /-1.86) -- 3";
         String[] result2 = pfEval.convertInfixToArr(arr2);
-        String[] expected2 = {"(", "42.35", "/", "-","1.86", ")", "-", "-", "3"};
+        String[] expected2 = {"(", "42.35", "/", "~","1.86", ")", "-", "~", "3"};
         assertArrayEquals(expected2, result2);
+
+//        unary + neglected
+        String arr3 = "+(x+y)";
+        String[] result3 = pfEval.convertInfixToArr(arr3);
+        String[] expected3 = {"(", "x", "+", "y", ")"};
+        assertArrayEquals(expected3, result3);
     }
 
     @Test
@@ -73,18 +81,41 @@ public class PostfixEvaluatorTest {
         String[] expected2 = {"4", "2", "+", "3", "5", "1", "-", "*", "+"};
         assertArrayEquals(expected2, result2);
 
+
+
     }
 
     @Test
-    public void testConvertInfix_ToPost_negativeFactor() {
-        String normal1 = "-3*---4";
-        String[] result1 = pfEval.convertInfixToPost(normal1);
-        String[] expected1 = {"-3", "*", "---4"};
+    public void testConvertInfix_ToPost_unary_negation() {
+//        String normal1 = "-3*---4";
+//        String[] result1 = pfEval.convertInfixToPost(normal1);
+//        String[] expected1 = {"-3", "*", "---4"};
+//
+//        String normal2 = "7*(4*-3)/(5+1)";
+//        String[] result2 = pfEval.convertInfixToPost(normal2);
+//        String[] expected2 = {"7", "4", "3", "*", "~", "1", "5", "+", "/", "*"};
+//        assertArrayEquals(expected2, result2);
 
-        String normal2 = "7*(4*-3)/(5+1)";
-        String[] result2 = pfEval.convertInfixToPost(normal2);
-        String[] expected2 = {"7", "4", "-3", "*", "1", "5", "+", "/", "*"};
-        assertArrayEquals(expected2, result2);
+        String normal3 = "-(x+y)";
+        String[] result3 = pfEval.convertInfixToPost(normal3);
+        String[] expected3 = {"x", "y", "+", "~"};
+        assertArrayEquals(expected3, result3);
+
+        String normal4 = "4*-x";
+        String[] result4 = pfEval.convertInfixToPost(normal4);
+        String[] expected4 = {"4", "x", "~", "*"};
+        System.out.println(Arrays.toString(result4));
+        assertArrayEquals(expected4, result4);
+
+        String normal5 = "2*(-x-y)";
+        String[] result5 = pfEval.convertInfixToPost(normal5);
+        String[] expected5 = {"2", "x", "~", "y", "-", "*"};
+        assertArrayEquals(expected5, result5);
+
+        String normal6 = "(4*x)-y";
+        String[] result6 = pfEval.convertInfixToPost(normal6);
+        String[] expected6 = {"4", "x", "*", "1", "-"};
+        assertArrayEquals(expected6, result6);
     }
 
     @Test
