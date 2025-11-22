@@ -81,6 +81,7 @@ public class EasyGrapher extends Application {
             drawAxes(axesGc);
             drawAxeIncrements(axesGc);
             drawFunction(graphGc);
+            drawLines(axesGc);
         });
 
         graphAndTitle.getChildren().add(canvasContainer);
@@ -88,6 +89,7 @@ public class EasyGrapher extends Application {
         drawFunction(graphGc);
         drawAxes(axesGc);
         drawAxeIncrements(axesGc);
+        drawLines(axesGc);
 
         System.out.println("Hello world");
 
@@ -155,6 +157,23 @@ public class EasyGrapher extends Application {
             gc.strokeLine(originX + h, originY - 5, originX + h, originY + 5);
             gc.strokeLine(originX - 5, originY + h, originX + 5, originY + h);
             gc.strokeLine(originX - 5, originY - h, originX + 5, originY - h);
+        }
+    }
+
+    public void drawLines(GraphicsContext gc) {
+        gc.setLineWidth(1);
+        gc.setStroke(Color.GRAY);
+        gc.setGlobalAlpha(0.2);
+
+
+        int originX = canvasWidth / 2;
+        int originY = canvasHeight / 2;
+
+        for (double h = 0; h < (double) canvasWidth / 2; h += (double) 60 / (lineCycle % 3 + 2)) {
+            gc.strokeLine(originX - h, 0, originX - h, canvasHeight);
+            gc.strokeLine(originX + h, 0, originX + h, canvasHeight);
+            gc.strokeLine(0, originY + h, canvasWidth, originY + h);
+            gc.strokeLine(0, originY - h, canvasWidth, originY - h);
         }
     }
 
