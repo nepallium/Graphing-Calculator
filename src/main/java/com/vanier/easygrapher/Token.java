@@ -39,6 +39,7 @@ public class Token {
                 // '-' is a unary negation if prevToken is null (ie its the first operation of the expression)
                 // or if the prev token is '('
                 // or if prev is binary operator
+                // or if prev is function, similar to '('
                 if (prevToken == null || operators.contains(prevToken.value) || prevToken.value.equals("(")) {
                     if (piece.equals("-")) {
                         return new Token(Type.FUNCTION, "~", 4, 1, true);

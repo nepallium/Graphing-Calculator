@@ -21,7 +21,6 @@ public class PostfixEvaluator {
     private final static String MULTIPLY = "*";
     private final static String DIVIDE = "/";
     private final static String EXPONENT = "^";
-    //TODO
     private final static String LN = "ln";
     private final static String SIN = "sin";
     private final static String COS = "cos";
@@ -39,18 +38,6 @@ public class PostfixEvaluator {
             SQRT, ABS
     );
 
-    /*
-    TODO
-    include a total of
-    + - * / ^
-ln
-sin cos tan
-asin acos atan
-sqrt abs
-pi e
-
-     */
-
     public ArrayList<Token> tokenize(String exprStr) {
         if (exprStr == null || exprStr.isEmpty()) {
             return null;
@@ -63,12 +50,47 @@ pi e
         for (String piece : expr) {
             Token token = Token.create(piece, prevToken);
             if (token != null) {
+
+                if (prevToken != null) {
+                    boolean prevIsNum = prevToken.type == Token.Type.NUMBER;
+                    boolean needMult = isNeedMult(prevToken, token, prevIsNum);
+
+                    if (needMult) {
+                        tokens.add(Token.create("*", null));
+                    }
+                }
+
                 tokens.add(token);
                 prevToken = token;
             }
         }
 
         return tokens;
+    }
+
+    private static boolean isNeedMult(Token prevToken, Token token, boolean prevIsNum) {
+        boolean prevIsVar = prevToken.type == Token.Type.VARIABLE;
+        boolean prevIsCloseParen = prevToken.type == Token.Type.PARENTHESIS && prevToken.value.equals(")");
+        boolean prevIsFunc = prevToken.type == Token.Type.FUNCTION;
+
+        boolean currIsNum = token.type == Token.Type.NUMBER;
+        boolean currIsVar = token.type == Token.Type.VARIABLE;
+        boolean currIsOpenParen = token.type == Token.Type.PARENTHESIS && token.value.equals("(");
+        boolean currIsFunc = token.type == Token.Type.FUNCTION;
+
+        boolean needMult =
+                // 3x, 3(x), 3sin(x)
+                (prevIsNum && (currIsVar || currIsOpenParen || currIsFunc)) ||
+
+                        // x3, x(x), x sin(x)
+                        (prevIsVar && (currIsNum || currIsOpenParen || currIsFunc)) ||
+
+                        // )(,   )x,   )3,   )sin(x)
+                        (prevIsCloseParen && (currIsOpenParen || currIsVar || currIsNum || currIsFunc)) ||
+
+                        // f(x)x
+                        (prevIsFunc && currIsVar);
+        return needMult;
     }
 
     private ArrayList<String> splitIntoPieces(String expr) {
@@ -80,8 +102,18 @@ pi e
         String current = "";
         for (Character c : expr.toCharArray()) {
             if (Character.isDigit(c) || c == '.') {
+                if (!current.isEmpty() && Character.isLetter(current.charAt(0))) {
+                    // case 5sin
+                    pieces.add(current);
+                    current = "";
+                }
                 current += c; // build a number
             } else if (Character.isLetter(c)) {
+                if (!current.isEmpty() && Character.isDigit(current.charAt(0))) {
+                    // case sin5
+                    pieces.add(current);
+                    current = "";
+                }
                 current += c; // build function or variable name
             } else {
                 if (!current.isEmpty()) {
@@ -163,6 +195,39 @@ pi e
 
             if (token.type == Token.Type.NUMBER) {
                 stack.push(parseDouble(token.value));
+            } else if (token.type == Token.Type.OPERATOR || token.type == Token.Type.FUNCTION) {
+                double[] args = new double[token.arity];
+                for (int i = token.arity - 1; i >= 0; i--) {
+                    args[i] = stack.pop();
+                }
+                try {
+                    double val = Token.calculate(token, args);
+                    stack.push(val);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        if (stack.size() != 1) {
+            throw new RuntimeException("Invalid postfix expression: stack size != 1");
+        }
+
+        return stack.peek();
+    }
+
+    public double evaluatePostfix(Token[] postfix, double xVal) {
+        Stack<Double> stack = new Stack<>();
+
+        for (Token token : postfix) {
+            if (token == null) {
+                continue;
+            }
+
+            if (token.type == Token.Type.NUMBER) {
+                stack.push(parseDouble(token.value));
+            } else if (token.type == Token.Type.VARIABLE) {
+                stack.push(xVal);
             } else if (token.type == Token.Type.OPERATOR || token.type == Token.Type.FUNCTION) {
                 double[] args = new double[token.arity];
                 for (int i = token.arity - 1; i >= 0; i--) {
