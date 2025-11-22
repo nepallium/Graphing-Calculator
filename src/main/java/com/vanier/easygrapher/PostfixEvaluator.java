@@ -5,18 +5,49 @@
 package com.vanier.easygrapher;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Stack;
 
 /**
  * @author Alex
  */
 public class PostfixEvaluator {
+    private final static String UNARY_SUB = "~";
     private final static String ADD = "+";
     private final static String SUBTRACT = "-";
     private final static String MULTIPLY = "*";
     private final static String DIVIDE = "/";
     private final static String EXPONENT = "^";
-    private final static String UNARY_SUB = "~";
+    //TODO
+    private final static String LN = "ln";
+    private final static String SIN = "sin";
+    private final static String COS = "cos";
+    private final static String TAN = "tan";
+    private final static String ASIN = "asin";
+    private final static String ACOS = "acos";
+    private final static String ATAN = "atan";
+    private final static String SQRT = "sqrt";
+    private final static String ABS = "abs";
+    private final static List<String> operators = Arrays.asList(
+            UNARY_SUB, ADD, SUBTRACT, MULTIPLY, DIVIDE,
+            EXPONENT, LN,
+            SIN, COS, TAN,
+            ASIN, ACOS, ATAN,
+            SQRT, ABS
+    );
+
+    /*
+    TODO
+    include a total of
+    + - * / ^
+ln
+sin cos tan
+asin acos atan
+sqrt abs
+pi e
+
+     */
 
     public double evaluatePostfix(String[] expressionArr) {
         double operand1, operand2, result = 0.0;
@@ -40,6 +71,7 @@ public class PostfixEvaluator {
                         case SUBTRACT -> operand1 - operand2;
                         case MULTIPLY -> operand1 * operand2;
                         case DIVIDE -> operand1 / operand2;
+                        case EXPONENT -> Math.pow(operand1, operand2);
                         default -> result;
                     };
                 }
@@ -141,9 +173,9 @@ public class PostfixEvaluator {
             } else if (isOperator(currStr)) {
                 while (!operatorStack.isEmpty() && !operatorStack.peek().equals("(") &&
                         // previous operator cannot be greater priority
-                        (getOperatorPriority(operatorStack.peek()) > getOperatorPriority(currStr) ||
+                        (getOperatorPrecedence(operatorStack.peek()) > getOperatorPrecedence(currStr) ||
                                 // two operators of the same priority cannot stay tgt
-                                (getOperatorPriority(operatorStack.peek()) == getOperatorPriority(currStr) &&
+                                (getOperatorPrecedence(operatorStack.peek()) == getOperatorPrecedence(currStr) &&
                                         !isRightAssociative(currStr)
                                 ))) {
                     postfixList.add(operatorStack.pop());
@@ -173,10 +205,7 @@ public class PostfixEvaluator {
             return false;
         }
 
-        return switch (c) {
-            case ADD, SUBTRACT, MULTIPLY, DIVIDE, EXPONENT, UNARY_SUB -> true;
-            default -> false;
-        };
+        return operators.contains(c);
     }
 
     private boolean isParenthesis(String c) {
@@ -210,7 +239,7 @@ public class PostfixEvaluator {
      * @param operator operator str
      * @return the precedence
      */
-    private int getOperatorPriority(String operator) {
+    private int getOperatorPrecedence(String operator) {
         return switch (operator) {
             case UNARY_SUB -> 4;
             case EXPONENT -> 3;
