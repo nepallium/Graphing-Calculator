@@ -1,4 +1,4 @@
-package com.vanier.easygrapher;
+package PostfixEvaluator;
 
 import Model.PostfixEvaluator;
 import Model.Token;

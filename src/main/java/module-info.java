@@ -1,6 +1,8 @@
 module com.vanier.easygrapher {
     requires javafx.controls;
     requires javafx.fxml;
+    requires static lombok;
+    requires commons.math3;
 
     exports Model;
     opens Model to javafx.fxml;
