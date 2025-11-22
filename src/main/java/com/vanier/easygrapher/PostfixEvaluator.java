@@ -9,6 +9,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 
+import static java.lang.Double.parseDouble;
+
 /**
  * @author Alex
  */
@@ -49,203 +51,136 @@ pi e
 
      */
 
-    public double evaluatePostfix(String[] expressionArr) {
-        double operand1, operand2, result = 0.0;
-        Stack<Double> stack = new Stack<>();
+    public ArrayList<Token> tokenize(String exprStr) {
+        if (exprStr == null || exprStr.isEmpty()) {
+            return null;
+        }
 
-        for (String token : expressionArr) {
-            if (token == null) {
-                continue;
-            }
+        ArrayList<String> expr = splitIntoPieces(exprStr);
+        ArrayList<Token> tokens = new ArrayList<>();
+        Token prevToken = null;
 
-            if (isOperator(token)) {
-                if (token.equals(UNARY_SUB)) {
-                    operand1 = stack.pop();
-                    result = -operand1;
-                } else {
-                    operand2 = stack.pop();
-                    operand1 = stack.pop();
-
-                    result = switch (token) {
-                        case ADD -> operand1 + operand2;
-                        case SUBTRACT -> operand1 - operand2;
-                        case MULTIPLY -> operand1 * operand2;
-                        case DIVIDE -> operand1 / operand2;
-                        case EXPONENT -> Math.pow(operand1, operand2);
-                        default -> result;
-                    };
-                }
-
-                stack.push(result);
-            } else {
-                try {
-                    Double num = Double.valueOf(token);
-                    stack.push(num);
-
-                } catch (NumberFormatException e) {
-                    System.out.println("not a double");
-                }
+        for (String piece : expr) {
+            Token token = Token.create(piece, prevToken);
+            if (token != null) {
+                tokens.add(token);
+                prevToken = token;
             }
         }
 
-        return result;
+        return tokens;
     }
 
-    public String[] convertInfixToArr(String expr) {
+    private ArrayList<String> splitIntoPieces(String expr) {
         if (expr == null || expr.isEmpty()) {
             return null;
         }
 
-        ArrayList<String> arrayList = new ArrayList<>();
-        String prevStr = "";
-        boolean isPrevNum = false;
-        for (int i = 0; i < expr.length(); i++) {
-            String currStr = String.valueOf(expr.charAt(i));
-            char currChr = currStr.charAt(0);
-
-            if (currStr.isBlank()) {
-                continue;
-            } else if ((currChr >= 'a' && currChr <= 'z') ||
-                    (currChr >= 'A' && currChr <= 'Z') ||
-                    (currChr >= '0' && currChr <= '9') ||
-                    currChr == '.') {
-                if (isPrevNum) {
-                    String newNum = arrayList.getLast() + currChr;
-                    arrayList.set(arrayList.size() - 1, newNum);
-                } else {
-                    arrayList.add(currStr);
-                }
-                isPrevNum = true;
+        ArrayList<String> pieces = new ArrayList<>();
+        String current = "";
+        for (Character c : expr.toCharArray()) {
+            if (Character.isDigit(c) || c == '.') {
+                current += c; // build a number
+            } else if (Character.isLetter(c)) {
+                current += c; // build function or variable name
             } else {
-                isPrevNum = false;
-                if (currChr == '-' || currChr == '+') {
-                    // '-' is a negation when minus is at beginning of expression
-                    // or after an opening parenthesis
-                    // or after binary operator
-                    // then it must be unary negation '~'
-                    if (i == 0 || prevStr.equals("(") || isOperator(prevStr)) {
-                        if (currChr == '-') {
-                            arrayList.add("~");
-                        }
-                        // no need to add unary '+'
-                        continue;
-                    }
+                if (!current.isEmpty()) {
+                    pieces.add(current);
+                    current = "";
                 }
-                arrayList.add(currStr);
+                if (Token.operators.contains("" + c) || c == '(' || c == ')') {
+                    pieces.add("" + c);
+                }
             }
-
-            prevStr = currStr;
         }
 
-        return arrayList.toArray(new String[0]);
+        if (!current.isEmpty()) {
+            pieces.add(current);
+        }
+
+        return pieces;
     }
 
-    public String[] convertInfixToPost(String exprStr) {
+    public Token[] convertInfixToPost(String exprStr) {
         if (exprStr == null || exprStr.isEmpty()) {
             return null;
         }
-        String[] expr = convertInfixToArr(exprStr);
+        ArrayList<Token> tokens = tokenize(exprStr);
 
-        ArrayList<String> postfixList = new ArrayList<>();
-        Stack<String> operatorStack = new Stack<>();
+        ArrayList<Token> output = new ArrayList<>();
+        Stack<Token> operatorStack = new Stack<>();
 
-        for (int i = 0; i < expr.length; i++) {
-            String currStr = String.valueOf(expr[i]);
-            char currChr = currStr.charAt(0);
-
-            // if operand, add to postfix
-            if ((currChr >= 'a' && currChr <= 'z') ||
-                    (currChr >= 'A' && currChr <= 'Z') ||
-                    (currChr >= '0' && currChr <= '9') ||
-                    currChr == '.'
-            ) {
-                postfixList.add(currStr);
-            } else if (currChr == '(') {
-                operatorStack.push(currStr);
-            }
-
-            // if closing bracket, pop everything until "("
-            else if (currChr == ')') {
-                while (!operatorStack.isEmpty() && !operatorStack.peek().equals("(")) {
-                    postfixList.add(operatorStack.pop());
+        for (Token token : tokens) {
+            if (token.type == Token.Type.NUMBER || token.type == Token.Type.VARIABLE) {
+                output.add(token);
+            } else if (token.value.equals("(")) {
+                operatorStack.push(token);
+            } else if (token.type == Token.Type.FUNCTION) {
+                operatorStack.push(token);
+            } else if (token.value.equals(")")) {
+                // if closing bracket, pop everything until "("
+                while (!operatorStack.isEmpty() && !operatorStack.peek().value.equals("(")) {
+                    output.add(operatorStack.pop());
                 }
                 operatorStack.pop();
-            } else if (isOperator(currStr)) {
-                while (!operatorStack.isEmpty() && !operatorStack.peek().equals("(") &&
-                        // previous operator cannot be greater priority
-                        (getOperatorPrecedence(operatorStack.peek()) > getOperatorPrecedence(currStr) ||
-                                // two operators of the same priority cannot stay tgt
-                                (getOperatorPrecedence(operatorStack.peek()) == getOperatorPrecedence(currStr) &&
-                                        !isRightAssociative(currStr)
-                                ))) {
-                    postfixList.add(operatorStack.pop());
+
+                // if there is a function on top, pop it too
+                if (!operatorStack.isEmpty() && operatorStack.peek().type == Token.Type.FUNCTION) {
+                    output.add(operatorStack.pop());
                 }
-                operatorStack.push(currStr);
+            } else if (token.type == Token.Type.OPERATOR) {
+                while (!operatorStack.isEmpty() && !operatorStack.peek().value.equals("(") &&
+                        // previous operator cannot be greater priority
+                        (operatorStack.peek().precedence > token.precedence ||
+                                // two operators of the same priority cannot stay tgt
+                                (operatorStack.peek().precedence == token.precedence &&
+                                        !operatorStack.peek().isRightAssociative)
+                        )) {
+                    output.add(operatorStack.pop());
+                }
+                operatorStack.push(token);
             }
         }
 
+
         // pop remaining operators
         while (!operatorStack.isEmpty()) {
-            postfixList.add(operatorStack.pop());
+            output.add(operatorStack.pop());
         }
 
         // catch exception and return as user input expr error
 
-        return postfixList.toArray(new String[0]);
+        return output.toArray(new Token[0]);
     }
 
-    /**
-     * Checks if the given string is a valid operator
-     *
-     * @param c the input String
-     * @return whether the string is a valid operator
-     */
-    private boolean isOperator(String c) {
-        if (c == null) {
-            return false;
+    public double evaluatePostfix(Token[] postfix) {
+        Stack<Double> stack = new Stack<>();
+
+        for (Token token : postfix) {
+            if (token == null) {
+                continue;
+            }
+
+            if (token.type == Token.Type.NUMBER) {
+                stack.push(parseDouble(token.value));
+            } else if (token.type == Token.Type.OPERATOR || token.type == Token.Type.FUNCTION) {
+                double[] args = new double[token.arity];
+                for (int i = token.arity - 1; i >= 0; i--) {
+                    args[i] = stack.pop();
+                }
+                try {
+                    double val = Token.calculate(token, args);
+                    stack.push(val);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
 
-        return operators.contains(c);
-    }
-
-    private boolean isParenthesis(String c) {
-        if (c == null) {
-            return false;
+        if (stack.size() != 1) {
+            throw new RuntimeException("Invalid postfix expression: stack size != 1");
         }
 
-        return c.equals("(") || c.equals(")");
-    }
-
-    /**
-     * Check if operator is right-associative
-     *
-     * @param operator the operator str
-     * @return whether the operator is right-associative
-     */
-    private boolean isRightAssociative(String operator) {
-        if (operator == null) {
-            return false;
-        }
-
-        return switch (operator) {
-            case EXPONENT, UNARY_SUB -> true;
-            default -> false;
-        };
-    }
-
-    /**
-     * Returns precedence of operators
-     *
-     * @param operator operator str
-     * @return the precedence
-     */
-    private int getOperatorPrecedence(String operator) {
-        return switch (operator) {
-            case UNARY_SUB -> 4;
-            case EXPONENT -> 3;
-            case MULTIPLY, DIVIDE -> 2;
-            case ADD, SUBTRACT -> 1;
-            default -> -1;
-        };
+        return stack.peek();
     }
 }

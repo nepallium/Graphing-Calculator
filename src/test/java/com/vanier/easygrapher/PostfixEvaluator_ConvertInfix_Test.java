@@ -23,20 +23,20 @@ public class PostfixEvaluator_ConvertInfix_Test {
     }
 
     @Test
-    public void testConvertInfixToArr() {
+    public void testTokenize() {
         String arr1 = "(42 + 1) -- 3";
-        String[] result1 = pfEval.convertInfixToArr(arr1);
+        String[] result1 = Token.toStrArray(pfEval.tokenize(arr1));
         String[] expected1 = {"(", "42", "+", "1", ")", "-", "~", "3"};
         assertArrayEquals(expected1, result1);
 
         String arr2 = "(42.35 /-1.86) -- 3";
-        String[] result2 = pfEval.convertInfixToArr(arr2);
+        String[] result2 = Token.toStrArray(pfEval.tokenize(arr2));
         String[] expected2 = {"(", "42.35", "/", "~","1.86", ")", "-", "~", "3"};
         assertArrayEquals(expected2, result2);
 
 //        unary + neglected
         String arr3 = "+(x+y)";
-        String[] result3 = pfEval.convertInfixToArr(arr3);
+        String[] result3 = Token.toStrArray(pfEval.tokenize(arr3));
         String[] expected3 = {"(", "x", "+", "y", ")"};
         assertArrayEquals(expected3, result3);
     }
@@ -44,12 +44,12 @@ public class PostfixEvaluator_ConvertInfix_Test {
     @Test
     public void testConvertInfix_ToPost_regular() {
         String normal1 = "((3+4)*2)/7";
-        String[] result1 = pfEval.convertInfixToPost(normal1);
+        String[] result1 = Token.toStrArray(pfEval.convertInfixToPost(normal1));
         String[] expected1 =  {"3", "4", "+", "2", "*", "7", "/"};
         assertArrayEquals(expected1, result1);
 
         String normal2 = "(4+2)+(3*(5-1))";
-        String[] result2 = pfEval.convertInfixToPost(normal2);
+        String[] result2 = Token.toStrArray(pfEval.convertInfixToPost(normal2));
         String[] expected2 = {"4", "2", "+", "3", "5", "1", "-", "*", "+"};
         assertArrayEquals(expected2, result2);
     }
@@ -57,32 +57,32 @@ public class PostfixEvaluator_ConvertInfix_Test {
     @Test
     public void testConvertInfix_ToPost_unary_negation() {
         String normal1 = "-3*---4";
-        String[] result1 = pfEval.convertInfixToPost(normal1);
+        String[] result1 = Token.toStrArray(pfEval.convertInfixToPost(normal1));
         String[] expected1 = {"3", "~", "4", "~", "~", "~", "*"};
         assertArrayEquals(expected1, result1);
 
         String normal2 = "7*(4*-3)/(5+1)";
-        String[] result2 = pfEval.convertInfixToPost(normal2);
+        String[] result2 = Token.toStrArray(pfEval.convertInfixToPost(normal2));
         String[] expected2 = {"7", "4", "3", "~", "*", "*", "5", "1", "+", "/"};
         assertArrayEquals(expected2, result2);
 
         String normal3 = "-(x+y)";
-        String[] result3 = pfEval.convertInfixToPost(normal3);
+        String[] result3 = Token.toStrArray(pfEval.convertInfixToPost(normal3));
         String[] expected3 = {"x", "y", "+", "~"};
         assertArrayEquals(expected3, result3);
 
         String normal4 = "4*-x";
-        String[] result4 = pfEval.convertInfixToPost(normal4);
+        String[] result4 = Token.toStrArray(pfEval.convertInfixToPost(normal4));
         String[] expected4 = {"4", "x", "~", "*"};
         assertArrayEquals(expected4, result4);
 
         String normal5 = "2*(-x-y)";
-        String[] result5 = pfEval.convertInfixToPost(normal5);
+        String[] result5 = Token.toStrArray(pfEval.convertInfixToPost(normal5));
         String[] expected5 = {"2", "x", "~", "y", "-", "*"};
         assertArrayEquals(expected5, result5);
 
         String normal6 = "(4*x)-y";
-        String[] result6 = pfEval.convertInfixToPost(normal6);
+        String[] result6 = Token.toStrArray(pfEval.convertInfixToPost(normal6));
         String[] expected6 = {"4", "x", "*", "y", "-"};
         assertArrayEquals(expected6, result6);
     }
@@ -90,12 +90,12 @@ public class PostfixEvaluator_ConvertInfix_Test {
     @Test
     public void testConvertInfix_ToPost_emptySpace() {
         String normal1 = "(  ( 3+4   )*2      )/7";
-        String[] result1 = pfEval.convertInfixToPost(normal1);
+        String[] result1 = Token.toStrArray(pfEval.convertInfixToPost(normal1));
         String[] expected1 =  {"3", "4", "+", "2", "*", "7", "/"};
         assertArrayEquals(expected1, result1);
 
         String normal2 = "(4  + 2) +(3*(   5- 1))";
-        String[] result2 = pfEval.convertInfixToPost(normal2);
+        String[] result2 = Token.toStrArray(pfEval.convertInfixToPost(normal2));
         String[] expected2 = {"4", "2", "+", "3", "5", "1", "-", "*", "+"};
         assertArrayEquals(expected2, result2);
     }
