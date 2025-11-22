@@ -1,4 +1,4 @@
-package com.vanier.easygrapher;
+package Model;
 
 import java.util.ArrayList;
 import java.util.Set;
@@ -42,7 +42,7 @@ public class Token {
                 // or if prev is function, similar to '('
                 if (prevToken == null || operators.contains(prevToken.value) || prevToken.value.equals("(")) {
                     if (piece.equals("-")) {
-                        return new Token(Type.FUNCTION, "~", 4, 1, true);
+                        return new Token(Type.OPERATOR, "~", 4, 1, true);
                     } else if (piece.equals("+")) {
                         return null;
                     }

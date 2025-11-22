@@ -2,6 +2,10 @@ module com.vanier.easygrapher {
     requires javafx.controls;
     requires javafx.fxml;
 
-    opens com.vanier.easygrapher to javafx.fxml;
-    exports com.vanier.easygrapher;
+    exports Model;
+    opens Model to javafx.fxml;
+    exports Main;
+    opens Main to javafx.fxml;
+    exports Controller;
+    opens Controller to javafx.fxml;
 }

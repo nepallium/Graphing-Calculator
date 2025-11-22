@@ -1,5 +1,7 @@
 package com.vanier.easygrapher;
 
+import Model.PostfixEvaluator;
+import Model.Token;
 import org.junit.Before;
 import org.junit.Test;
 

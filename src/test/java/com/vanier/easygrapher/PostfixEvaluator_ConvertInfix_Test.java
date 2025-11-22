@@ -6,6 +6,9 @@ package com.vanier.easygrapher;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+
+import Model.PostfixEvaluator;
+import Model.Token;
 import org.junit.Before;
 import org.junit.Test;
 
